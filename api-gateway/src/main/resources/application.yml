@@ -10,6 +10,13 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "${CORS_ALLOWED_ORIGINS:http://localhost:3000}"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
   zipkin:
     base-url: http://${ZIPKIN_HOST:localhost}:9411
 
@@ -25,5 +32,6 @@ security:
     secret: ${JWT_SECRET:dev-only-shared-secret-please-override-in-config-server-2026}
     free-paths:
       - /actuator/**
-      - /api/user/login
-      - /api/user/signup
+      - /api/v1/auth/login
+      - /api/v1/auth/signup
+      - /api/v1/auth/activate/**
