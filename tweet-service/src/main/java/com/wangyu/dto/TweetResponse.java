@@ -10,6 +10,8 @@ public class TweetResponse {
     private String imageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private long likeCount;
+    private long retweetCount;
 
     public TweetResponse() {
     }
@@ -60,5 +62,21 @@ public class TweetResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public long getRetweetCount() {
+        return retweetCount;
+    }
+
+    public void setRetweetCount(long retweetCount) {
+        this.retweetCount = retweetCount;
     }
 }

@@ -38,3 +38,5 @@ tweet-service:
   kafka:
     hashtag-parsed-topic: hashtag-parsed
     mention-parsed-topic: mention-parsed
+    tweet-liked-topic: tweet-liked
+    tweet-retweeted-topic: tweet-retweeted

@@ -38,6 +38,12 @@ public class Tweet {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "like_count", nullable = false)
+    private long likeCount;
+
+    @Column(name = "retweet_count", nullable = false)
+    private long retweetCount;
+
     protected Tweet() {
     }
 
@@ -48,6 +54,8 @@ public class Tweet {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+        this.likeCount = 0L;
+        this.retweetCount = 0L;
     }
 
     public void changeContent(String content) {
@@ -81,5 +89,13 @@ public class Tweet {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public long getRetweetCount() {
+        return retweetCount;
     }
 }
