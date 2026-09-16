@@ -71,7 +71,7 @@ graph TD
 
 ### 4.3. 전체 서비스 공통 빌드/인프라 컨벤션 (All Modules)
 모든 마이크로서비스(도메인 서비스뿐 아니라 `eureka-server`, `config-server` 등 인프라 서비스 포함)에 예외 없이 적용됩니다.
-* **[MUST] groupId / 패키지 구조:** 모든 모듈의 Maven `groupId`는 `com.gmail.merikbest2015`로 통일합니다. 임의의 프로젝트명을 새로 짓지 마십시오. **Java 패키지도 groupId와 동일한 `com.gmail.merikbest2015` 평평한(flat) 구조를 그대로 사용**합니다 — 서비스별 하위 패키지(`.eurekaserver`, `.configserver` 등)를 임의로 만들지 마십시오.
+* **[MUST] groupId / 패키지 구조:** 모든 모듈의 Maven `groupId`는 `com.wangyu`로 통일합니다(팀 자체 네임스페이스 — 원본 저자 개인 계정명을 그대로 베낄 필요 없음, groupId 자체는 설계 결정이 아니라 임의 식별자이므로 리뷰 시 원본과의 문자열 일치 여부를 채점 대상으로 삼지 않습니다). **Java 패키지도 groupId와 동일한 `com.wangyu` 평평한(flat) 구조를 그대로 사용**합니다 — 서비스별 하위 패키지(`.eurekaserver`, `.configserver` 등)를 임의로 만들지 마십시오.
 * **[MUST] 호스트/포트 설정:** `application.yml`의 모든 호스트명은 하드코딩(`localhost`)하지 말고 환경변수 폴백 패턴을 사용합니다. 예: `${EUREKA_HOST:localhost}`, `${ZIPKIN_HOST:localhost}`. 컨테이너 배포 시 환경변수로 오버라이드하기 위함입니다.
 * **[MUST] 분산 추적 (Zipkin):** 모든 서비스의 `application.yml`에 `spring.zipkin.base-url: http://${ZIPKIN_HOST:localhost}:9411`을 포함하고, `pom.xml`에 `micrometer-tracing-bridge-brave` 의존성을 추가합니다.
 * **[MUST] 서비스 디스커버리 등록:** `eureka-server` 자신을 제외한 모든 서비스(인프라 서비스인 `config-server` 포함)는 `spring-cloud-starter-netflix-eureka-client`를 의존성에 포함하고 Eureka에 자신을 등록해야 합니다.

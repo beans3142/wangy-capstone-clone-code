@@ -1,4 +1,4 @@
-package com.gmail.merikbest2015;
+package com.wangyu;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
