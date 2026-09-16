@@ -2,6 +2,7 @@ package com.wangyu;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -51,6 +52,14 @@ public class JwtProviderTest {
     public void resolvesEmailFromSubjectClaim() {
         String token = tokenFor("wangyu@example.com", 60_000);
 
+        assertEquals("wangyu@example.com", provider.resolveEmail(token));
+    }
+
+    @Test
+    public void generatesTokenThatCarriesSubjectAndCustomClaims() {
+        String token = provider.generateToken("wangyu@example.com", Map.of("userId", 42));
+
+        assertTrue(provider.validateToken(token));
         assertEquals("wangyu@example.com", provider.resolveEmail(token));
     }
 
