@@ -80,6 +80,13 @@ graph TD
 * Eureka 서버 자체의 `enable-self-preservation` 등 로컬 개발 편의를 위한 임의 튜닝 플래그는 원본에 없는 한 추가하지 마십시오 — 명시되지 않은 설정은 프레임워크 기본값을 그대로 둡니다.
 * **[MUST] 공통 의존성은 루트 pom.xml에:** `spring-boot-starter-test`, `junit`(4.13.2) 등 모든 모듈이 공통으로 쓰는 의존성은 루트 `pom.xml`의 `<dependencies>`(상속되는 블록, `dependencyManagement` 아님)에 한 번만 선언합니다. 자식 모듈 `pom.xml`에 중복 선언하지 마십시오. `junit-vintage-engine`도 ADR-001(JUnit4 유지)을 위해 루트에 포함되어 있습니다 — Spring Boot 3.x의 `spring-boot-starter-test`는 기본적으로 JUnit5만 포함하므로 이 엔진 없이는 `org.junit.Test`가 아예 실행되지 않습니다.
 
+### 4.4. 로컬 개발/테스트 인프라 (DB, 메시징)
+JPA를 쓰는 서비스(Phase 3+)가 등장하면서부터 적용됩니다. 이 인프라는 미리 떠 있습니다 — 서비스가 직접 DB나 Kafka를 설치하려 하지 마십시오.
+* **[MUST] PostgreSQL 접속 정보:** `jdbc:postgresql://${DATASOURCE_HOST:localhost}:${DATASOURCE_PORT:5433}/{서비스명}` (예: user-service → DB명 `user`), 계정 `postgres`/`root`. **포트가 원본 관례인 5432가 아니라 5433입니다** — 이 개발 머신의 5432는 이미 다른 프로젝트가 점유하고 있어(`hwangjeon-db` 컨테이너, 절대 건드리지 마십시오), 이 프로젝트 전용 PostgreSQL을 별도 포트(Docker 컨테이너 `wangyu-pg`)로 띄워뒀습니다. 반드시 `${DATASOURCE_PORT:5433}` 환경변수 폴백 패턴을 쓰고 5432를 하드코딩하지 마십시오.
+* **[MUST] 운영/테스트 DB 분리:** 런타임 프로파일은 `{서비스명}` DB(`ddl-auto: validate`, `flyway.locations: classpath:db/migration`), 테스트 프로파일은 `{서비스명}-test` DB(`ddl-auto: none`, `sql.init.data-locations`로 시드 스크립트 로드)를 씁니다. 두 DB 모두 미리 생성되어 있습니다.
+* **[MUST] Kafka 접속 정보:** `spring.kafka.bootstrap-servers: ${KAFKA_HOST:localhost}:9092` — 로컬 단일 노드 브로커(Docker 컨테이너 `wangyu-kafka`)가 이미 떠 있습니다. 토픽은 스프링이 자동 생성하도록 두고 수동 생성하지 마십시오.
+* **[MUST] 서비스 간 단위 테스트는 Repository/Producer를 `@MockBean`으로 대체:** `AbstractServiceTest`(각 서비스가 직접 만듦, `@SpringBootTest` + `@RunWith(SpringRunner.class)`)에서 Repository·Kafka Producer·Feign Client를 전부 `@MockBean`으로 등록합니다. 실제 DB/Kafka 접속은 이 단위 테스트에서 필요하지 않습니다 — 위 4.4 인프라는 애플리케이션을 실제로 기동(`mvn spring-boot:run`)하거나 향후 통합 테스트를 만들 때를 위한 것입니다.
+
 ---
 
 ## 5. 아키텍처 결정 기록 (Architecture Decision Records - ADR)
