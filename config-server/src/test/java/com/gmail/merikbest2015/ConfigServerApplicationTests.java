@@ -1,4 +1,4 @@
-package com.wangy.configserver;
+package com.gmail.merikbest2015;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
