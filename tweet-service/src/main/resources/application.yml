@@ -1,0 +1,40 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: tweet-service
+  datasource:
+    url: jdbc:postgresql://${DATASOURCE_HOST:localhost}:${DATASOURCE_PORT:5433}/tweet
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  zipkin:
+    base-url: http://${ZIPKIN_HOST:localhost}:9411
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOST:localhost}
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-shared-secret-please-override-in-config-server-2026}
+    expiration-millis: ${JWT_EXPIRATION_MILLIS:3600000}
+
+tweet-service:
+  kafka:
+    hashtag-parsed-topic: hashtag-parsed
+    mention-parsed-topic: mention-parsed
