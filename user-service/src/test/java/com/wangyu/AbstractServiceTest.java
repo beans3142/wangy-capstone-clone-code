@@ -1,6 +1,7 @@
 package com.wangyu;
 
 import com.wangyu.kafka.UserRegisteredEventProducer;
+import com.wangyu.repository.FollowRepository;
 import com.wangyu.repository.UserRepository;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,9 @@ public abstract class AbstractServiceTest {
 
     @MockBean
     protected UserRepository userRepository;
+
+    @MockBean
+    protected FollowRepository followRepository;
 
     @MockBean
     protected UserRegisteredEventProducer userRegisteredEventProducer;
