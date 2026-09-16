@@ -76,6 +76,7 @@ graph TD
 * **[MUST] 분산 추적 (Zipkin):** 모든 서비스의 `application.yml`에 `spring.zipkin.base-url: http://${ZIPKIN_HOST:localhost}:9411`을 포함하고, `pom.xml`에 `micrometer-tracing-bridge-brave` 의존성을 추가합니다.
 * **[MUST] 서비스 디스커버리 등록:** `eureka-server` 자신을 제외한 모든 서비스(인프라 서비스인 `config-server` 포함)는 `spring-cloud-starter-netflix-eureka-client`를 의존성에 포함하고 Eureka에 자신을 등록해야 합니다.
 * Eureka 서버 자체의 `enable-self-preservation` 등 로컬 개발 편의를 위한 임의 튜닝 플래그는 원본에 없는 한 추가하지 마십시오 — 명시되지 않은 설정은 프레임워크 기본값을 그대로 둡니다.
+* **[MUST] 공통 의존성은 루트 pom.xml에:** `spring-boot-starter-test`, `junit`(4.13.2) 등 모든 모듈이 공통으로 쓰는 의존성은 루트 `pom.xml`의 `<dependencies>`(상속되는 블록, `dependencyManagement` 아님)에 한 번만 선언합니다. 자식 모듈 `pom.xml`에 중복 선언하지 마십시오. `junit-vintage-engine`도 ADR-001(JUnit4 유지)을 위해 루트에 포함되어 있습니다 — Spring Boot 3.x의 `spring-boot-starter-test`는 기본적으로 JUnit5만 포함하므로 이 엔진 없이는 `org.junit.Test`가 아예 실행되지 않습니다.
 
 ---
 

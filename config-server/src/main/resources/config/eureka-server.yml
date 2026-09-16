@@ -1,5 +1,3 @@
 eureka:
   instance:
-    hostname: localhost
-  server:
-    enable-self-preservation: false
+    hostname: ${EUREKA_HOST:localhost}
