@@ -1,8 +1,13 @@
 package com.wangyu;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 
+import javax.crypto.SecretKey;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -25,6 +30,8 @@ public class JwtAuthenticationFilterTest {
 
     private static final String SECRET = "test-only-secret-key-used-for-gateway-unit-tests-2026-abcdefg";
 
+    private JwtProvider jwtProvider;
+    private UserLookupClient userLookupClient;
     private JwtAuthenticationFilter filter;
     private GatewayFilterChain chain;
 
@@ -36,7 +43,9 @@ public class JwtAuthenticationFilterTest {
         GatewayRouteProperties routeProperties = new GatewayRouteProperties();
         routeProperties.setFreePaths(List.of("/api/user/login", "/api/user/signup"));
 
-        filter = new JwtAuthenticationFilter(new JwtProvider(jwtProperties), routeProperties);
+        jwtProvider = new JwtProvider(jwtProperties);
+        userLookupClient = mock(UserLookupClient.class);
+        filter = new JwtAuthenticationFilter(jwtProvider, routeProperties, userLookupClient);
         chain = mock(GatewayFilterChain.class);
         when(chain.filter(any())).thenReturn(Mono.empty());
     }
@@ -71,6 +80,44 @@ public class JwtAuthenticationFilterTest {
         verify(exchange.getResponse()).setStatusCode(HttpStatus.UNAUTHORIZED);
     }
 
+    @Test
+    public void injectsAuthUserIdHeaderWhenUserLookupSucceeds() {
+        String token = validTokenFor("wangyu@example.com");
+        ServerWebExchange exchange = exchangeFor("/api/tweet/feed", "Bearer " + token);
+
+        AuthUserResponse user = new AuthUserResponse();
+        user.setId(42L);
+        user.setEmail("wangyu@example.com");
+        when(userLookupClient.findByEmail("wangyu@example.com")).thenReturn(Mono.just(user));
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any());
+        verify(exchange.getResponse(), never()).setStatusCode(any());
+    }
+
+    @Test
+    public void rejectsWhenUserLookupReturnsNoUser() {
+        String token = validTokenFor("ghost@example.com");
+        ServerWebExchange exchange = exchangeFor("/api/tweet/feed", "Bearer " + token);
+
+        when(userLookupClient.findByEmail("ghost@example.com")).thenReturn(Mono.empty());
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, never()).filter(any());
+        verify(exchange.getResponse()).setStatusCode(HttpStatus.UNAUTHORIZED);
+    }
+
+    private String validTokenFor(String subject) {
+        SecretKey signingKey = Keys.hmacShaKeyFor(SECRET.getBytes());
+        return Jwts.builder()
+                .subject(subject)
+                .expiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(signingKey)
+                .compact();
+    }
+
     private ServerWebExchange exchangeFor(String path, String authorizationHeaderValue) {
         HttpHeaders headers = new HttpHeaders();
         if (authorizationHeaderValue != null) {
@@ -80,6 +127,10 @@ public class JwtAuthenticationFilterTest {
         ServerHttpRequest request = mock(ServerHttpRequest.class);
         when(request.getURI()).thenReturn(URI.create("http://localhost" + path));
         when(request.getHeaders()).thenReturn(headers);
+        ServerHttpRequest.Builder requestBuilder = mock(ServerHttpRequest.Builder.class);
+        when(request.mutate()).thenReturn(requestBuilder);
+        when(requestBuilder.headers(any())).thenReturn(requestBuilder);
+        when(requestBuilder.build()).thenReturn(request);
 
         ServerHttpResponse response = mock(ServerHttpResponse.class);
         when(response.setComplete()).thenReturn(Mono.empty());
@@ -87,6 +138,10 @@ public class JwtAuthenticationFilterTest {
         ServerWebExchange exchange = mock(ServerWebExchange.class);
         when(exchange.getRequest()).thenReturn(request);
         when(exchange.getResponse()).thenReturn(response);
+        ServerWebExchange.Builder exchangeBuilder = mock(ServerWebExchange.Builder.class);
+        when(exchange.mutate()).thenReturn(exchangeBuilder);
+        when(exchangeBuilder.request(any(java.util.function.Consumer.class))).thenReturn(exchangeBuilder);
+        when(exchangeBuilder.build()).thenReturn(exchange);
 
         return exchange;
     }

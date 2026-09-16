@@ -64,7 +64,7 @@ graph TD
 ### 4.1. 보안 및 인증 (Security)
 * **JwtProvider 위치:** `commons` 모듈에 `JwtProvider`(서명·만료 검증, subject/이메일 파싱)를 둡니다. `api-gateway`를 포함해 토큰을 다뤄야 하는 모든 서비스가 이 클래스를 공유합니다 — 서비스마다 JWT 파싱 로직을 따로 만들지 마십시오.
 * **게이트웨이 인증 흐름(전체 그림):** ① `api-gateway`가 `JwtProvider`로 토큰 서명/만료만 우선 검증해 즉시 401 차단 여부를 결정 → ② 검증된 토큰의 이메일로 `user-service`를 동기 호출해 계정 활성화 여부를 확인 → ③ 활성 계정이면 요청 헤더에 `X-Auth-User-Id`를 주입해 하위 서비스로 전달, 하위 서비스는 이 헤더로 호출자를 식별(매번 JWT를 재파싱하지 않음).
-  **[MUST NOT]** ②·③ 단계는 `user-service`(Phase 3)가 존재해야 의미가 있습니다. `user-service`가 아직 없는 Phase에서는 ①(서명/만료 검증 + 401 차단)까지만 구현하고, ②·③은 Phase 3 완료 직후 별도 통합 작업으로 이어 붙입니다 — 존재하지 않는 서비스를 향한 호출 코드를 미리 작성해두지 마십시오. Phase 3의 `user-service`는 `GET /api/v1/auth/user/{email}` 엔드포인트로 `{id, email, activationCode}`를 반환해야 이 통합이 가능합니다.
+  **완료됨(Phase 6 착수 전):** ②·③ 단계가 실제로 연결되어 있습니다 — `api-gateway`의 `UserLookupClient`가 `lb://user-service`로 이메일 조회 후 `X-Auth-User-Id` 헤더를 하위 서비스로 주입합니다. 활성화(`activationCode`) 여부로는 여전히 차단하지 않습니다(Phase 3의 결정 유지) — 계정이 존재하는지만 확인합니다. 조회 실패(계정 없음/네트워크 오류)는 401로 처리합니다. **Phase 6부터 만드는 새 엔드포인트(좋아요/리트윗/북마크 등)는 사용자 식별자를 body/path 파라미터로 받지 말고 이 헤더에서 추출하십시오.** 단, Phase 3~5에서 이미 통과한 기존 엔드포인트(signup/login/tweet CRUD 등)는 이번 통합을 이유로 되짚어 고치지 않습니다 — 점진적 도입입니다.
 * **동기 통신 전파:** `@FeignClient` 호출 시 `commons` 모듈의 `FeignRequestInterceptor`가 자동으로 JWT 토큰을 다음 서비스로 릴레이.
 
 ### 4.2. 전역 예외 처리 (Exception Handling)

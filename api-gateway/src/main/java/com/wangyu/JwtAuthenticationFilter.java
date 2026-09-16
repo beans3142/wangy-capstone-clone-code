@@ -10,22 +10,30 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+
 /**
- * 서명/만료 검증까지만 게이트웨이에서 수행한다. 검증된 이메일로 user-service를 조회해
- * 활성화 여부를 확인하고 X-Auth-User-Id 헤더를 주입하는 것(원본 AuthFilter의 나머지 절반)은
- * user-service(Phase 3)가 존재해야 실제로 의미가 있어, 이번 Phase에서는 구현하지 않는다.
- * architecture.md 4.1 참고.
+ * architecture.md 4.1의 인증 흐름을 완성한다: ①서명/만료 검증 → ②검증된 이메일로 user-service를
+ * 조회 → ③X-Auth-User-Id 헤더를 주입해 하위 서비스로 전달. 활성화 여부(activationCode)는 Phase 3가
+ * "정보성 필드로만 두고 로그인/인증을 막지 않는다"고 결정한 바 있어(phase03-agent-worklog.md 참고),
+ * 여기서도 활성화 상태로 요청을 차단하지 않는다 — 존재하는 계정인지만 확인한다.
  */
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
+    private static final String AUTH_USER_ID_HEADER = "X-Auth-User-Id";
+
     private final JwtProvider jwtProvider;
     private final GatewayRouteProperties routeProperties;
+    private final UserLookupClient userLookupClient;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    public JwtAuthenticationFilter(JwtProvider jwtProvider, GatewayRouteProperties routeProperties) {
+    public JwtAuthenticationFilter(JwtProvider jwtProvider,
+                                    GatewayRouteProperties routeProperties,
+                                    UserLookupClient userLookupClient) {
         this.jwtProvider = jwtProvider;
         this.routeProperties = routeProperties;
+        this.userLookupClient = userLookupClient;
     }
 
     @Override
@@ -41,7 +49,19 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return reject(exchange);
         }
 
-        return chain.filter(exchange);
+        String email = jwtProvider.resolveEmail(token);
+        return userLookupClient.findByEmail(email)
+                .map(Optional::of)
+                .defaultIfEmpty(Optional.empty())
+                .flatMap(maybeUser -> maybeUser
+                        .map(user -> chain.filter(withAuthUserIdHeader(exchange, user.getId())))
+                        .orElseGet(() -> reject(exchange)));
+    }
+
+    private ServerWebExchange withAuthUserIdHeader(ServerWebExchange exchange, Long userId) {
+        return exchange.mutate()
+                .request(request -> request.headers(headers -> headers.set(AUTH_USER_ID_HEADER, String.valueOf(userId))))
+                .build();
     }
 
     @Override
