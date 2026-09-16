@@ -4,26 +4,28 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/**
+ * 서명/만료 검증까지만 게이트웨이에서 수행한다. 검증된 이메일로 user-service를 조회해
+ * 활성화 여부를 확인하고 X-Auth-User-Id 헤더를 주입하는 것(원본 AuthFilter의 나머지 절반)은
+ * user-service(Phase 3)가 존재해야 실제로 의미가 있어, 이번 Phase에서는 구현하지 않는다.
+ * architecture.md 4.1 참고.
+ */
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
-    private final JwtValidator jwtValidator;
-    private final JwtProperties jwtProperties;
+    private final JwtProvider jwtProvider;
+    private final GatewayRouteProperties routeProperties;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    public JwtAuthenticationFilter(JwtValidator jwtValidator, JwtProperties jwtProperties) {
-        this.jwtValidator = jwtValidator;
-        this.jwtProperties = jwtProperties;
+    public JwtAuthenticationFilter(JwtProvider jwtProvider, GatewayRouteProperties routeProperties) {
+        this.jwtProvider = jwtProvider;
+        this.routeProperties = routeProperties;
     }
 
     @Override
@@ -34,8 +36,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        String token = resolveToken(exchange.getRequest());
-        if (token == null || !jwtValidator.isValid(token)) {
+        String token = jwtProvider.resolveToken(exchange.getRequest());
+        if (token == null || !jwtProvider.validateToken(token)) {
             return reject(exchange);
         }
 
@@ -48,16 +50,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isFreePath(String path) {
-        return jwtProperties.getFreePaths().stream()
+        return routeProperties.getFreePaths().stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
-    }
-
-    private String resolveToken(ServerHttpRequest request) {
-        String header = request.getHeaders().getFirst(AUTHORIZATION_HEADER);
-        if (header == null || !header.startsWith(BEARER_PREFIX)) {
-            return null;
-        }
-        return header.substring(BEARER_PREFIX.length());
     }
 
     private Mono<Void> reject(ServerWebExchange exchange) {

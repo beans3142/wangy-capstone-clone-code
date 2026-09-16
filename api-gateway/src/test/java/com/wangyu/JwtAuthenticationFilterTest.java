@@ -30,11 +30,13 @@ public class JwtAuthenticationFilterTest {
 
     @Before
     public void setUp() {
-        JwtProperties properties = new JwtProperties();
-        properties.setSecret(SECRET);
-        properties.setFreePaths(List.of("/api/user/login", "/api/user/signup"));
+        JwtProperties jwtProperties = new JwtProperties();
+        jwtProperties.setSecret(SECRET);
 
-        filter = new JwtAuthenticationFilter(new JwtValidator(properties), properties);
+        GatewayRouteProperties routeProperties = new GatewayRouteProperties();
+        routeProperties.setFreePaths(List.of("/api/user/login", "/api/user/signup"));
+
+        filter = new JwtAuthenticationFilter(new JwtProvider(jwtProperties), routeProperties);
         chain = mock(GatewayFilterChain.class);
         when(chain.filter(any())).thenReturn(Mono.empty());
     }
