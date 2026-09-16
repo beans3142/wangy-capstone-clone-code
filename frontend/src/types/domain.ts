@@ -49,6 +49,10 @@ export interface TweetResponse {
   imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  // 좋아요 백엔드가 이 작업 도중 완성되면서 TweetResponse에 뒤늦게 추가된 필드
+  // (tweet-service의 likeCount/retweetCount 비정규화 컬럼, worklog 참고).
+  likeCount: number;
+  retweetCount: number;
 }
 
 export interface TweetCreateRequest {

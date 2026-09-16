@@ -57,7 +57,8 @@ export function feedReducer(state: FeedState = initialState, action: FeedAction)
       // 즉시 토글해 MVP 수용 기준("누르면 좋아요 수가 바뀐다")을 만족시킨다.
       const tweetId = action.payload.tweetId;
       const alreadyLiked = state.likedTweetIds.includes(tweetId);
-      const currentCount = state.likeCounts[tweetId] ?? 0;
+      const serverLikeCount = state.items.find((tweet) => tweet.id === tweetId)?.likeCount ?? 0;
+      const currentCount = state.likeCounts[tweetId] ?? serverLikeCount;
       return {
         ...state,
         likedTweetIds: alreadyLiked

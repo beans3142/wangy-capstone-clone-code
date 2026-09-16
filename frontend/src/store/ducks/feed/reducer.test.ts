@@ -10,6 +10,8 @@ const sampleTweet: TweetResponse = {
   imageUrl: null,
   createdAt: '2026-01-01T00:00:00',
   updatedAt: '2026-01-01T00:00:00',
+  likeCount: 0,
+  retweetCount: 0,
 };
 
 describe('feedReducer', () => {
