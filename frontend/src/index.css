@@ -1,0 +1,7 @@
+/* MUI v4 CssBaseline이 리셋/타이포그래피를 전담하므로, Vite 스캐폴드가 기본 제공하던
+   장식용 커스텀 CSS(색상 변수, #root 중앙정렬 등)는 걷어내고 최소한만 남긴다. */
+html,
+body,
+#root {
+  height: 100%;
+}
