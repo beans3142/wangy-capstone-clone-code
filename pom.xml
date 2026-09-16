@@ -29,6 +29,8 @@
         <module>config-server</module>
         <module>commons</module>
         <module>api-gateway</module>
+        <module>user-service</module>
+        <module>email-service</module>
     </modules>
 
     <dependencyManagement>
@@ -69,6 +71,11 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>0.8.12</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/*Application.class</exclude>
+                        </excludes>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>prepare-agent</id>
