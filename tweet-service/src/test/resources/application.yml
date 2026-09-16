@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: tweet-service
+  datasource:
+    url: jdbc:postgresql://${DATASOURCE_HOST:localhost}:${DATASOURCE_PORT:5433}/tweet-test
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: never
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:9092
+  cloud:
+    discovery:
+      enabled: false
+    openfeign:
+      circuitbreaker:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+security:
+  jwt:
+    secret: test-only-secret-key-used-for-tweet-service-unit-tests-2026
+
+tweet-service:
+  kafka:
+    hashtag-parsed-topic: hashtag-parsed
+    mention-parsed-topic: mention-parsed
+    tweet-liked-topic: tweet-liked
+    tweet-retweeted-topic: tweet-retweeted
