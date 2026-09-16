@@ -69,6 +69,15 @@ graph TD
 * **[MUST]** 비즈니스 예외 발생 시 `throw new ApiRequestException(...)`을 던집니다.
 * `commons`의 `GlobalExceptionHandler`가 이를 캐치하여 공통 JSON 스펙으로 변환합니다. `try-catch`로 하드코딩된 응답을 만들지 마십시오.
 
+### 4.3. 전체 서비스 공통 빌드/인프라 컨벤션 (All Modules)
+모든 마이크로서비스(도메인 서비스뿐 아니라 `eureka-server`, `config-server` 등 인프라 서비스 포함)에 예외 없이 적용됩니다.
+* **[MUST] groupId / 패키지 구조:** 모든 모듈의 Maven `groupId`는 `com.wangyu`로 통일합니다(팀 자체 네임스페이스 — 원본 저자 개인 계정명을 그대로 베낄 필요 없음, groupId 자체는 설계 결정이 아니라 임의 식별자이므로 리뷰 시 원본과의 문자열 일치 여부를 채점 대상으로 삼지 않습니다). **Java 패키지도 groupId와 동일한 `com.wangyu` 평평한(flat) 구조를 그대로 사용**합니다 — 서비스별 하위 패키지(`.eurekaserver`, `.configserver` 등)를 임의로 만들지 마십시오.
+* **[MUST] 호스트/포트 설정:** `application.yml`의 모든 호스트명은 하드코딩(`localhost`)하지 말고 환경변수 폴백 패턴을 사용합니다. 예: `${EUREKA_HOST:localhost}`, `${ZIPKIN_HOST:localhost}`. 컨테이너 배포 시 환경변수로 오버라이드하기 위함입니다.
+* **[MUST] 분산 추적 (Zipkin):** 모든 서비스의 `application.yml`에 `spring.zipkin.base-url: http://${ZIPKIN_HOST:localhost}:9411`을 포함하고, `pom.xml`에 `micrometer-tracing-bridge-brave` 의존성을 추가합니다.
+* **[MUST] 서비스 디스커버리 등록:** `eureka-server` 자신을 제외한 모든 서비스(인프라 서비스인 `config-server` 포함)는 `spring-cloud-starter-netflix-eureka-client`를 의존성에 포함하고 Eureka에 자신을 등록해야 합니다.
+* Eureka 서버 자체의 `enable-self-preservation` 등 로컬 개발 편의를 위한 임의 튜닝 플래그는 원본에 없는 한 추가하지 마십시오 — 명시되지 않은 설정은 프레임워크 기본값을 그대로 둡니다.
+* **[MUST] 공통 의존성은 루트 pom.xml에:** `spring-boot-starter-test`, `junit`(4.13.2) 등 모든 모듈이 공통으로 쓰는 의존성은 루트 `pom.xml`의 `<dependencies>`(상속되는 블록, `dependencyManagement` 아님)에 한 번만 선언합니다. 자식 모듈 `pom.xml`에 중복 선언하지 마십시오. `junit-vintage-engine`도 ADR-001(JUnit4 유지)을 위해 루트에 포함되어 있습니다 — Spring Boot 3.x의 `spring-boot-starter-test`는 기본적으로 JUnit5만 포함하므로 이 엔진 없이는 `org.junit.Test`가 아예 실행되지 않습니다.
+
 ---
 
 ## 5. 아키텍처 결정 기록 (Architecture Decision Records - ADR)
