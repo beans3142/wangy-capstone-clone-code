@@ -1,0 +1,12 @@
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+security:
+  jwt:
+    secret: test-only-secret-key-used-for-gateway-unit-tests-2026-abcdefg
+    free-paths:
+      - /actuator/**
+      - /api/user/login
+      - /api/user/signup

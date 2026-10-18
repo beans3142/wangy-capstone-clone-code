@@ -8,6 +8,7 @@
 
 ## 2. 단위 테스트 검증
 * **[MUST]** 터미널에서 단위 테스트(`mvn test` 또는 `npm run test`)가 Green 상태인지 확인.
+* **[MUST]** 변경된 모듈에 분기(if-else, 예외 처리 등)를 포함한 비즈니스 로직이 하나라도 있으면 `check-test-coverage` 스킬을 실행합니다. 순수 부트스트랩/설정 모듈(분기 없음, 예: 인프라 서버의 `@SpringBootApplication` 진입점)은 이 스킬 대상이 아닙니다 — 그 판단 기준 자체가 `check-test-coverage.md`에 있습니다.
 
 ## 3. 주석 및 클린 코드 점검 (clean-up-comments)
 * **[MUST]** 프로젝트 클린 코드 정책에 따라, 코드 리뷰나 프롬프트 대화 맥락이 섞인 오염된 주석이 없는지 스스로 스캔하고 완벽히 삭제.

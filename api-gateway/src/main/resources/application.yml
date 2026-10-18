@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+  zipkin:
+    base-url: http://${ZIPKIN_HOST:localhost}:9411
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOST:localhost}
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-shared-secret-please-override-in-config-server-2026}
+    free-paths:
+      - /actuator/**
+      - /api/user/login
+      - /api/user/signup
