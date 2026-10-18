@@ -15,4 +15,8 @@ public interface TweetProjection {
     LocalDateTime getCreatedAt();
 
     LocalDateTime getUpdatedAt();
+
+    long getLikeCount();
+
+    long getRetweetCount();
 }

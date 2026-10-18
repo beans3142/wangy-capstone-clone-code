@@ -48,4 +48,12 @@ public class TweetTest {
         assertTrue(tweet.isAuthoredBy(1L));
         assertFalse(tweet.isAuthoredBy(2L));
     }
+
+    @Test
+    public void newTweetStartsWithZeroLikeAndRetweetCount() {
+        Tweet tweet = new Tweet(1L, "hello", null);
+
+        assertEquals(0L, tweet.getLikeCount());
+        assertEquals(0L, tweet.getRetweetCount());
+    }
 }
